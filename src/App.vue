@@ -4,15 +4,18 @@
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component';
-import HelloWorld from './components/HelloWorld.vue';
+import { defineComponent } from "vue";
+import HelloWorld from "./components/HelloWorld.vue";
 
-@Options({
+export default defineComponent({
   components: {
     HelloWorld,
   },
-})
-export default class App extends Vue {}
+
+  setup() {
+    return {};
+  },
+});
 </script>
 
 <style>

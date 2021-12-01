@@ -1,28 +1,31 @@
 <template>
-  <a-button type="primary">Primary Button</a-button>
-  <a-button>Default Button</a-button>
-  <a-button type="dashed">Dashed Button</a-button>
-  <a-button type="text">Text Button</a-button>
-  <a-button type="link">Link Button</a-button>
+  <a-button @click="count += 1">{{ count }}</a-button>
 </template>
 
 
 
 
 <script lang="ts">
-import { Options, Vue } from "vue-class-component";
+import { defineComponent, ref } from "vue";
 
-@Options({
-  components: {},
-  props: {
-    msg: String,
+  setup() {
+    let count = ref(0);
+
+    return {
+      count,
+    };
   },
-})
-export default class HelloWorld extends Vue {
-  msg!: string;
-}
+});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="less" scoped>
+.header {
+  border: 1px solid;
+
+  .span {
+    display: block;
+    font-size: 10px;
+  }
+}
 </style>
