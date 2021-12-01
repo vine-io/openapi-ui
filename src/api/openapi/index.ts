@@ -5,6 +5,9 @@ import axios from "axios";
 
 export class OpenAPI {
     public openapi?: string
+
+    constructor() {
+    }
 }
 
 export function GetOpenAPI(): Promise<OpenAPI> {

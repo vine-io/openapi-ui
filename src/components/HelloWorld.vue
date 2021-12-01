@@ -1,26 +1,18 @@
 <template>
-  <a-button @click="count += 1">{{ count }}</a-button>
-
-  <div class="header">header {{ count }}</div>
+  <div>version: {{ out.openapi }}</div>
 </template>
 
 
 <script setup lang="ts">
-import {ref} from "vue";
-import {GetOpenAPI} from "../api/openapi";
+import {onMounted, Ref, ref} from "vue";
+import {GetOpenAPI, OpenAPI} from "../api/openapi";
 
-let count = ref(0);
+let out: Ref<OpenAPI> = ref(new OpenAPI());
 
-let out = GetOpenAPI();
-
-out.then(out => {
-  console.log(out.openapi)
+onMounted(async () => {
+  out.value = await GetOpenAPI()
 })
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="less" scoped>
-.header {
-  font-size: 10px;
-}
 </style>
