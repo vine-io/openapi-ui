@@ -1,14 +1,10 @@
 import {createApp} from 'vue'
 import App from './App.vue'
+import {RegisterComponents} from "./components";
 
-import {
-    Button,
-} from "ant-design-vue";
 
-const app = createApp(App)
+let app = createApp(App)
 
-app.use(
-    Button,
-)
+app = RegisterComponents(app);
 
 app.mount('#app')
