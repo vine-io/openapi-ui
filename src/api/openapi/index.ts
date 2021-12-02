@@ -2,13 +2,7 @@
 获取 openapi.json
  */
 import axios from "axios";
-
-export class OpenAPI {
-    public openapi?: string
-
-    constructor() {
-    }
-}
+import {OpenAPI} from "./openapi";
 
 export function GetOpenAPI(): Promise<OpenAPI> {
 
@@ -22,3 +16,4 @@ export function GetOpenAPI(): Promise<OpenAPI> {
 
     return instance.get("/api/openapi.json").then(rsp => rsp.data);
 }
+

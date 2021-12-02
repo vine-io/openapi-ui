@@ -1,19 +1,20 @@
 <template>
-  <!--  <img alt="Vue logo" src="./assets/logo.png">-->
-  <HelloWorld/>
+  <ConfigProvider :locale="getAntdLocale">
+    <AppProvider>
+      <RouterView />
+    </AppProvider>
+  </ConfigProvider>
 </template>
 
-<script setup lang="ts">
-import HelloWorld from "./components/HelloWorld.vue";
-</script>
+<script lang="ts" setup>
+  import { ConfigProvider } from 'ant-design-vue';
+  import { AppProvider } from '/@/components/Application';
+  import { useTitle } from '/@/hooks/web/useTitle';
+  import { useLocale } from '/@/locales/useLocale';
 
-<style>
-#app {
-  /* font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px; */
-}
-</style>
+  // support Multi-language
+  const { getAntdLocale } = useLocale();
+
+  // Listening to page changes and dynamically changing site titles
+  useTitle();
+</script>
