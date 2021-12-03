@@ -279,7 +279,8 @@ export default defineComponent({
     }
 
     function renderContent() {
-      return (
+      // @ts-ignore
+        return (
         <>
           <SwitchItem
             title={t('layout.setting.breadcrumb')}
@@ -401,7 +402,7 @@ export default defineComponent({
         {...attrs}
         title={t('layout.setting.drawerTitle')}
         width={330}
-        wrapClassName="setting-drawer"
+        class="setting-drawer"
       >
         {unref(getShowDarkModeToggle) && <Divider>{() => t('layout.setting.darkMode')}</Divider>}
         {unref(getShowDarkModeToggle) && <AppDarkModeToggle class="mx-auto" />}

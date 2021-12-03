@@ -69,7 +69,11 @@
     padding-top: 2px;
 
     &__overlay {
-      max-width: 360px;
+      max-width: 500px;
+
+      .ant-popover-content {
+        width: 400px;
+      }
     }
 
     .ant-tabs-content {

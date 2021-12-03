@@ -5,6 +5,7 @@ import {
   Button as AntButton,
   Input,
   Layout,
+  Collapse,
 } from 'ant-design-vue';
 
 const compList = [AntButton.Group];
@@ -14,5 +15,5 @@ export function registerGlobComp(app: App) {
     app.component(comp.name || comp.displayName, comp);
   });
 
-  app.use(Input).use(Button).use(Layout);
+  app.use(Collapse).use(Input).use(Button).use(Layout);
 }
