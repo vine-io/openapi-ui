@@ -1,93 +1,91 @@
 <template>
-  <div class="p-4">
-    <div class="md:flex enter-y doc-content">
-      <Collapse
-        v-model:activeKey="activeKey"
-        expand-icon-position="left"
-        :bordered="false"
+  <div class="p-4 doc">
+    <div class="md:flex enter-y">
+      <Menu
         class="md:w-1/6 !md:mx-0 !md:my-0 !my-0 w-full"
-      >
-        <CollapsePanel v-for="(item, index) in doc.tags" :key="index" :header="item.name">
-          <p>{{ item.description }}</p>
-        </CollapsePanel>
-        <!--        <CollapsePanel key="2" header="This is panel header 2">-->
-        <!--          <p>{{ text }}</p>-->
-        <!--        </CollapsePanel>-->
-        <!--        <CollapsePanel key="3" header="This is panel header 3">-->
-        <!--          <p>{{ text }}</p>-->
-        <!--        </CollapsePanel>-->
-      </Collapse>
-      <Card class="md:w-5/6 !md:mx-0 !md:my-0 !my-0 w-full">{{ doc.tags }}</Card>
+        :tags="tags"
+        :paths="paths"
+        @change-content="handleChangeContent"
+      />
+      <Content class="md:w-5/6 !md:mx-0 !md:my-0 !my-0 w-full" :data="content" />
     </div>
   </div>
 </template>
 <script lang="ts">
-  import { Collapse, CollapsePanel, Card } from 'ant-design-vue';
-  import { defineComponent, onMounted, ref, watch } from 'vue';
+  import Menu from './components/Menu.vue';
+  import Content from './components/Content.vue';
+  import { defineComponent, onMounted, ref } from 'vue';
   import { GetOpenAPI } from '/@/api/openapi';
-  import { OpenAPI, OpenAPIPath, OpenAPITag } from '/@/api/openapi/openapi';
+  import { OpenAPI, OpenAPIPath, OpenAPIPathDocs, OpenAPITag } from '/@/api/openapi/openapi';
+
+  class APIContent {
+    url?: string;
+    method?: string;
+    docs?: OpenAPIPathDocs;
+
+    constructor(url?, method?, docs?) {
+      this.url = url;
+      this.method = method;
+      this.docs = docs;
+    }
+  }
 
   export default defineComponent({
     components: {
-      Collapse,
-      CollapsePanel,
-      Card,
+      Menu,
+      Content,
     },
     setup() {
-      const activeKey = ref(['1']);
-      const expandIconPosition = ref('left');
+      const loading = ref(false);
 
       let doc = ref<OpenAPI>(new OpenAPI());
       let tags = ref(new Array<OpenAPITag>(0));
-      let paths = ref(new Map());
+      // tag => url => method => OpenAPIPathDocs
+      let paths = ref(new Map<string, Map<string, OpenAPIPath>>());
+
+      let content = ref(new APIContent());
 
       onMounted(async () => {
-        await GetOpenAPI();
-        // let rsp = await GetOpenAPI();
-        // // doc.value = rsp;
-        // // tags.value = doc.value.tags ? doc.value.tags : [];
-        // // if (doc.value.paths) {
-        // //   console.log(typeof (rsp.paths as Map<string, OpenAPIPath>));
-        // //   // for (let entry of unref(doc.value.paths).entries()) {
-        // //   //   paths.value.set(entry[0], entry[1]);
-        // //   // }
-        // // }
-        // // console.log(paths);
-        // // let tt = new Proxy(rsp, {
-        // //   get(target, name) {
-        // //     console.log(target.paths);
-        // //     console.log(name);
-        // //     return target;
-        // //   },
-        // // });
-        // let path: Map<string, OpenAPIPath> = new Map<string, OpenAPIPath>();
-        // // path.set('1', new OpenAPIPath());
-        // Object.assign(path, rsp.paths);
-        // // console.log(path.get('/api/v1'));
+        doc.value = await GetOpenAPI();
+
+        if (doc.value.tags && doc.value.tags.length > 0) {
+          tags.value = doc.value.tags;
+          for (let tag of tags.value) {
+            paths.value.set(tag.name as string, new Map<string, OpenAPIPath>());
+          }
+        }
+
+        if (doc.value.paths) {
+          for (let url of Object.keys(doc.value.paths)) {
+            let pathItems = Reflect.get(doc.value.paths, url) as OpenAPIPath;
+            for (let method of Object.keys(pathItems)) {
+              let path = Reflect.get(pathItems, method) as OpenAPIPathDocs;
+              if (path.tags && path.tags.length > 0) {
+                let k = path.tags[0];
+                (paths.value.get(k) as Map<string, OpenAPIPath>).set(url, pathItems);
+              }
+            }
+          }
+        }
       });
 
-      const handleClick = (event: MouseEvent) => {
-        // If you don't want click extra trigger collapse, you can prevent this:
-        event.stopPropagation();
+      const handleChangeContent = (c: APIContent) => {
+        content.value = c;
       };
-      watch(activeKey, (_) => {
-        // console.log(val);
-      });
 
       return {
-        activeKey,
-        expandIconPosition,
-        handleClick,
+        loading,
+        handleChangeContent,
         doc,
         tags,
         paths,
+        content,
       };
     },
   });
 </script>
 
 <style scoped lang="less">
-  .doc-content {
-    min-height: 720px;
+  .doc {
   }
 </style>
