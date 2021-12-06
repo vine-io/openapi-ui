@@ -8,6 +8,8 @@ import {
   Collapse,
   Tabs,
   Divider,
+  Table,
+  Checkbox,
 } from 'ant-design-vue';
 
 const compList = [AntButton.Group];
@@ -17,5 +19,13 @@ export function registerGlobComp(app: App) {
     app.component(comp.name || comp.displayName, comp);
   });
 
-  app.use(Input).use(Button).use(Layout).use(Collapse).use(Tabs).use(Divider);
+  app
+    .use(Input)
+    .use(Button)
+    .use(Layout)
+    .use(Collapse)
+    .use(Tabs)
+    .use(Divider)
+    .use(Table)
+    .use(Checkbox);
 }

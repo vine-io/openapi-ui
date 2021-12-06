@@ -29,4 +29,8 @@ export const createLocalStorage = (options: Options = {}) => {
   return createStorage(localStorage, { ...options, timeout: DEFAULT_CACHE_TIME });
 };
 
+export const createOpenAPIStorage = (options: Options = {}) => {
+  return createStorage(localStorage, { ...options, timeout: DEFAULT_CACHE_TIME });
+};
+
 export default WebStorage;

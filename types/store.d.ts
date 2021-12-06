@@ -46,3 +46,10 @@ export interface BeforeMiniState {
   menuMode?: MenuModeEnum;
   menuType?: MenuTypeEnum;
 }
+
+// openapi information
+export interface OpenAPIInfo {
+  store: Map<string, OpenAPISession>;
+}
+
+export interface OpenAPISession {}

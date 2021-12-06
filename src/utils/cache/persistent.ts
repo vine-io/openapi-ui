@@ -1,8 +1,8 @@
-import type { LockInfo, UserInfo } from '/#/store';
+import type { LockInfo, OpenAPIInfo, UserInfo } from '/#/store';
 import type { ProjectConfig } from '/#/config';
 import type { RouteLocationNormalized } from 'vue-router';
 
-import { createLocalStorage, createSessionStorage } from '/@/utils/cache';
+import { createLocalStorage, createOpenAPIStorage, createSessionStorage } from '/@/utils/cache';
 import { Memory } from './memory';
 import {
   TOKEN_KEY,
@@ -13,10 +13,12 @@ import {
   APP_LOCAL_CACHE_KEY,
   APP_SESSION_CACHE_KEY,
   MULTIPLE_TABS_KEY,
+  OPEN_API_KEY,
 } from '/@/enums/cacheEnum';
 import { DEFAULT_CACHE_TIME } from '/@/settings/encryptionSetting';
 import { toRaw } from 'vue';
 import { pick, omit } from 'lodash-es';
+import openAPI from '/@/router/routes/modules/openapi';
 
 interface BasicStore {
   [TOKEN_KEY]: string | number | null | undefined;
@@ -25,27 +27,35 @@ interface BasicStore {
   [LOCK_INFO_KEY]: LockInfo;
   [PROJ_CFG_KEY]: ProjectConfig;
   [MULTIPLE_TABS_KEY]: RouteLocationNormalized[];
+  [OPEN_API_KEY]: OpenAPIInfo;
 }
 
 type LocalStore = BasicStore;
 
 type SessionStore = BasicStore;
 
+type OpenAPIStore = BasicStore;
+
 export type BasicKeys = keyof BasicStore;
 type LocalKeys = keyof LocalStore;
 type SessionKeys = keyof SessionStore;
+type OpenAPIKeys = keyof OpenAPIStore;
 
 const ls = createLocalStorage();
 const ss = createSessionStorage();
+const os = createOpenAPIStorage();
 
 const localMemory = new Memory(DEFAULT_CACHE_TIME);
 const sessionMemory = new Memory(DEFAULT_CACHE_TIME);
+const openAPIMemory = new Memory(DEFAULT_CACHE_TIME);
 
 function initPersistentMemory() {
   const localCache = ls.get(APP_LOCAL_CACHE_KEY);
   const sessionCache = ss.get(APP_SESSION_CACHE_KEY);
+  const openapiCache = os.get(OPEN_API_KEY);
   localCache && localMemory.resetCache(localCache);
   sessionCache && sessionMemory.resetCache(sessionCache);
+  openAPI && openAPIMemory.resetCache(openapiCache);
 }
 
 export class Persistent {
@@ -81,17 +91,39 @@ export class Persistent {
     sessionMemory.remove(key);
     immediate && ss.set(APP_SESSION_CACHE_KEY, sessionMemory.getCache);
   }
+
   static clearSession(immediate = false): void {
     sessionMemory.clear();
+    immediate && ss.clear();
+  }
+
+  static getOpenAPI<T>(key: OpenAPIKeys) {
+    return openAPIMemory.get(key)?.value as Nullable<T>;
+  }
+
+  static setOpenAPI(key: OpenAPIKeys, value: OpenAPIStore[OpenAPIKeys], immediate = false): void {
+    openAPIMemory.set(key, toRaw(value));
+    immediate && ss.set(OPEN_API_KEY, openAPIMemory.getCache);
+  }
+
+  static removeOpenAPI(key: OpenAPIKeys, immediate = false): void {
+    openAPIMemory.remove(key);
+    immediate && ss.set(OPEN_API_KEY, openAPIMemory.getCache);
+  }
+
+  static clearOpenAPI(immediate = false): void {
+    openAPIMemory.clear();
     immediate && ss.clear();
   }
 
   static clearAll(immediate = false) {
     sessionMemory.clear();
     localMemory.clear();
+    openAPIMemory.clear();
     if (immediate) {
       ls.clear();
       ss.clear();
+      os.clear();
     }
   }
 }
