@@ -21,8 +21,17 @@
 <script lang="ts">
   import { defineComponent, onMounted, ref } from 'vue';
   import { Collapse, CollapsePanel } from 'ant-design-vue';
-  import { OpenAPIPath, OpenAPIPathDocs } from '/@/api/openapi/openapi';
-  import { APIContent } from '/@/views/openapi/components/index';
+  import {
+    Basic,
+    Bearer,
+    Cookies,
+    KVD,
+    OpenAPIPath,
+    OpenAPIPathDocs,
+    Request,
+    Response,
+  } from '/#/store';
+  import { useOpenAPIStore } from '/@/store/modules/openapi';
 
   export default defineComponent({
     name: 'Menu',
@@ -39,9 +48,27 @@
     setup(props, context) {
       let activeKey = ref(['0']);
 
+      const apiStore = useOpenAPIStore();
+
       const onSelectPath = (path: OpenAPIPath, method: string, url: string) => {
         let docs = Reflect.get(path, method) as OpenAPIPathDocs;
-        context.emit('changeContent', new APIContent(url, method, docs));
+
+        let session = {
+          request: {
+            method: method,
+            path: url,
+            url: url,
+            // parameters?: Array<KVD>;
+            // authorization?: Bearer | Basic;
+            headers: [],
+            // body?: Array<KVD>;
+          },
+          response: {},
+          docs: docs,
+        };
+
+        apiStore.pushSession(session);
+        // context.emit('changeContent', new APIContent(url, method, docs));
       };
 
       onMounted(async () => {

@@ -1,4 +1,4 @@
-import { OpenAPIPathDocs } from '/@/api/openapi/openapi';
+import { OpenAPIPathDocs } from '/#/store';
 
 export class APIContent {
   url?: string;

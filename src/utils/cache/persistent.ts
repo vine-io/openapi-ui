@@ -1,4 +1,4 @@
-import type { LockInfo, OpenAPIInfo, UserInfo } from '/#/store';
+import type { LockInfo, OpenAPIInfo, OpenAPISessions, UserInfo } from '/#/store';
 import type { ProjectConfig } from '/#/config';
 import type { RouteLocationNormalized } from 'vue-router';
 
@@ -13,7 +13,8 @@ import {
   APP_LOCAL_CACHE_KEY,
   APP_SESSION_CACHE_KEY,
   MULTIPLE_TABS_KEY,
-  OPEN_API_KEY,
+  API_SESSION_KEY,
+  API_SESSION_CACHE_KEY,
 } from '/@/enums/cacheEnum';
 import { DEFAULT_CACHE_TIME } from '/@/settings/encryptionSetting';
 import { toRaw } from 'vue';
@@ -27,7 +28,7 @@ interface BasicStore {
   [LOCK_INFO_KEY]: LockInfo;
   [PROJ_CFG_KEY]: ProjectConfig;
   [MULTIPLE_TABS_KEY]: RouteLocationNormalized[];
-  [OPEN_API_KEY]: OpenAPIInfo;
+  [API_SESSION_KEY]: OpenAPIInfo;
 }
 
 type LocalStore = BasicStore;
@@ -52,7 +53,7 @@ const openAPIMemory = new Memory(DEFAULT_CACHE_TIME);
 function initPersistentMemory() {
   const localCache = ls.get(APP_LOCAL_CACHE_KEY);
   const sessionCache = ss.get(APP_SESSION_CACHE_KEY);
-  const openapiCache = os.get(OPEN_API_KEY);
+  const openapiCache = os.get(API_SESSION_CACHE_KEY);
   localCache && localMemory.resetCache(localCache);
   sessionCache && sessionMemory.resetCache(sessionCache);
   openAPI && openAPIMemory.resetCache(openapiCache);
@@ -97,23 +98,27 @@ export class Persistent {
     immediate && ss.clear();
   }
 
-  static getOpenAPI<T>(key: OpenAPIKeys) {
-    return openAPIMemory.get(key)?.value as Nullable<T>;
+  static getOpenAPI(key: OpenAPIKeys): OpenAPISessions {
+    if (openAPIMemory.get(key)) {
+      return openAPIMemory.get(key)?.value;
+    }
+
+    return Reflect.get(os.get(key), API_SESSION_KEY).value as OpenAPISessions;
   }
 
   static setOpenAPI(key: OpenAPIKeys, value: OpenAPIStore[OpenAPIKeys], immediate = false): void {
     openAPIMemory.set(key, toRaw(value));
-    immediate && ss.set(OPEN_API_KEY, openAPIMemory.getCache);
+    immediate && os.set(API_SESSION_KEY, openAPIMemory.getCache);
   }
 
   static removeOpenAPI(key: OpenAPIKeys, immediate = false): void {
     openAPIMemory.remove(key);
-    immediate && ss.set(OPEN_API_KEY, openAPIMemory.getCache);
+    immediate && os.set(API_SESSION_KEY, openAPIMemory.getCache);
   }
 
   static clearOpenAPI(immediate = false): void {
     openAPIMemory.clear();
-    immediate && ss.clear();
+    immediate && os.clear();
   }
 
   static clearAll(immediate = false) {
@@ -138,6 +143,10 @@ window.addEventListener('beforeunload', function () {
   ss.set(APP_SESSION_CACHE_KEY, {
     ...omit(sessionMemory.getCache, LOCK_INFO_KEY),
     ...pick(ss.get(APP_SESSION_CACHE_KEY), [TOKEN_KEY, USER_INFO_KEY, LOCK_INFO_KEY]),
+  });
+  os.set(API_SESSION_CACHE_KEY, {
+    ...omit(openAPIMemory.getCache, API_SESSION_KEY),
+    ...pick(os.get(API_SESSION_CACHE_KEY), [TOKEN_KEY, USER_INFO_KEY, LOCK_INFO_KEY]),
   });
 });
 

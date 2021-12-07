@@ -1,32 +1,70 @@
-import type { OpenAPIInfo } from '/#/store';
+import type { OpenAPISessions, OpenAPISession, OpenAPI } from '/#/store';
 
 import { defineStore } from 'pinia';
 
-import { OPEN_API_KEY } from '/@/enums/cacheEnum';
+import { API_SESSION_KEY } from '/@/enums/cacheEnum';
 import { Persistent } from '/@/utils/cache/persistent';
+import { store } from '/@/store';
 
 interface OpenAPIState {
-  openAPIInfo: Nullable<OpenAPIInfo>;
+  apiSession: Nullable<OpenAPISessions>;
+  doc: Nullable<OpenAPI>;
 }
 
-export const OpenAPIStore = defineStore({
+export const useOpenAPIStore = defineStore({
   id: 'openapi',
   state: (): OpenAPIState => ({
-    openAPIInfo: Persistent.getLocal(OPEN_API_KEY),
+    apiSession: Persistent.getOpenAPI(API_SESSION_KEY),
+    doc: {},
   }),
   getters: {
-    getOpenAPI(): Nullable<OpenAPIInfo> {
-      return this.openAPIInfo;
+    getAPISession(): Array<OpenAPISession> {
+      return this.apiSession?.store || [];
+    },
+    getDoc(): Nullable<OpenAPI> {
+      return this.doc;
     },
   },
   actions: {
-    setOpenAPI(info: OpenAPIInfo) {
-      this.openAPIInfo = Object.assign({}, this.openAPIInfo, info);
-      Persistent.setOpenAPI(OPEN_API_KEY, this.openAPIInfo, true);
+    setAPISession(sessions: OpenAPISessions) {
+      this.apiSession = Object.assign({}, this.apiSession, sessions);
+      Persistent.setOpenAPI(API_SESSION_KEY, this.apiSession, true);
+    },
+    pushSession(session: OpenAPISession) {
+      if (!this.apiSession) {
+        this.apiSession = { store: [] };
+      }
+      this.apiSession.store.push(session);
+      this.setAPISession(this.apiSession);
+    },
+    removeSession(index: number) {
+      if (!this.apiSession) {
+        this.apiSession = { store: [] };
+        return;
+      }
+      this.apiSession.store.splice(index, 1);
+      this.setAPISession(this.apiSession);
+    },
+    editSession(index: number, session: OpenAPISession) {
+      if (!this.apiSession) {
+        this.apiSession = { store: [] };
+        return;
+      }
+      this.apiSession.store[index] = session;
+      this.setAPISession(this.apiSession);
+    },
+    setDoc(doc: OpenAPI) {
+      this.doc = doc;
     },
     resetOpenAPI() {
-      Persistent.removeOpenAPI(OPEN_API_KEY, true);
-      this.openAPIInfo = null;
+      Persistent.removeOpenAPI(API_SESSION_KEY, true);
+      this.apiSession = { store: [] };
+      this.doc = {};
     },
   },
 });
+
+// Need to be used outside the setup
+export function useOpenAPIStoreWithOut() {
+  return useOpenAPIStore(store);
+}

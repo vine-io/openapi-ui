@@ -16,7 +16,8 @@
   import Content from './components/Content.vue';
   import { defineComponent, onMounted, ref } from 'vue';
   import { GetOpenAPI } from '/@/api/openapi';
-  import { OpenAPI, OpenAPIPath, OpenAPIPathDocs, OpenAPITag } from '/@/api/openapi/openapi';
+  import { OpenAPI, OpenAPIPath, OpenAPIPathDocs, OpenAPITag } from '/#/store';
+  import { useOpenAPIStore } from '/@/store/modules/openapi';
 
   class APIContent {
     url?: string;
@@ -37,8 +38,9 @@
     },
     setup() {
       const loading = ref(false);
+      const apiStore = useOpenAPIStore();
 
-      let doc = ref<OpenAPI>(new OpenAPI());
+      let doc = ref<OpenAPI>({});
       let tags = ref(new Array<OpenAPITag>(0));
       // tag => url => method => OpenAPIPathDocs
       let paths = ref(new Map<string, Map<string, OpenAPIPath>>());
@@ -67,6 +69,8 @@
             }
           }
         }
+
+        apiStore.setDoc(doc.value);
       });
 
       const handleChangeContent = (c: APIContent) => {

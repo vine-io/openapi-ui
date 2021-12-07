@@ -12,6 +12,7 @@ import { createStateGuard } from './stateGuard';
 import nProgress from 'nprogress';
 import projectSetting from '/@/settings/projectSetting';
 import { createParamMenuGuard } from './paramMenuGuard';
+import { useOpenAPIStoreWithOut } from '/@/store/modules/openapi';
 
 // Don't change the order of creation
 export function setupRouterGuard(router: Router) {
@@ -48,6 +49,7 @@ function createPageGuard(router: Router) {
 
 // Used to handle page loading status
 function createPageLoadingGuard(router: Router) {
+  useOpenAPIStoreWithOut();
   const userStore = useUserStoreWithOut();
   const appStore = useAppStoreWithOut();
   const { getOpenPageLoading } = useTransitionSetting();

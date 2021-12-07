@@ -5,6 +5,7 @@ import { useUserStore } from '/@/store/modules/user';
 import { usePermissionStore } from '/@/store/modules/permission';
 import { PageEnum } from '/@/enums/pageEnum';
 import { removeTabChangeListener } from '/@/logics/mitt/routeChange';
+import { useOpenAPIStore } from '/@/store/modules/openapi';
 
 export function createStateGuard(router: Router) {
   router.afterEach((to) => {
@@ -14,10 +15,12 @@ export function createStateGuard(router: Router) {
       const userStore = useUserStore();
       const appStore = useAppStore();
       const permissionStore = usePermissionStore();
+      const apiStore = useOpenAPIStore();
       appStore.resetAllState();
       permissionStore.resetState();
       tabStore.resetState();
       userStore.resetState();
+      apiStore.resetOpenAPI();
       removeTabChangeListener();
     }
   });

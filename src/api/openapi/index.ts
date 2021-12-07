@@ -2,7 +2,7 @@
 获取 openapi.json
  */
 import axios from 'axios';
-import { OpenAPI } from './openapi';
+import { OpenAPI } from '/#/store';
 
 export function GetOpenAPI(): Promise<OpenAPI> {
   const cfg = {
