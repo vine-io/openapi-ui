@@ -1,34 +1,36 @@
 <template>
   <div>
     <h1>Query Params</h1>
-    <Table :columns="columns" :data-source="data" size="small" :pagination="false" bordered>
+    <Table :columns="columns" :data-source="parameters" size="small" :pagination="false" bordered>
       <template #bodyCell="{ text, record, index, column }">
         <template v-if="column.dataIndex === 'selected'">
-          <div class="check-box" v-if="index !== data.length - 1">
+          <div class="check-box" v-if="index !== parameters.length - 1">
             <span class="icon"><Icon icon="ant-design:swap-outlined" /></span>
-            <Checkbox v-model:checked="record[column.dataIndex]" />
+            <Checkbox :disabled="record['required']" v-model:checked="record[column.dataIndex]" />
           </div>
         </template>
         <template v-else-if="column.dataIndex !== 'action'">
-          <div v-if="editableData[index].get(column.dataIndex)">
+          <div v-if="record['edited'].includes(column.dataIndex)">
             <Input
               v-model:value="record[column.dataIndex]"
               @change="handleChange(index)"
-              @blur="editableData[index].set(column.dataIndex, false)"
+              @blur="handleBlur(record, column.dataIndex)"
               size="small"
             />
           </div>
           <div
+            v-else
             class="text-param"
             :class="record.selected ? '' : 'text-placeholder'"
-            v-else
-            @click="editableData[index].set(column.dataIndex, true)"
-            >{{ index !== data.length - 1 ? text : column.dataIndex }}
+            @click="handleClick(record, column.dataIndex)"
+          >
+            <span>{{ index !== parameters.length - 1 ? text : column.dataIndex }}</span>
           </div>
         </template>
-        <template v-else-if="index !== data.length - 1">
-          <a @click="handleClose(index)">
-            <Icon class="icon" icon="ant-design:close-outlined" />
+        <template v-else-if="index !== parameters.length - 1">
+          <Icon icon="ant-design:lock-filled" v-if="record['required']" />
+          <a @click="handleClose(index)" v-else>
+            <Icon icon="ant-design:close-outlined" />
           </a>
         </template>
       </template>
@@ -37,16 +39,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, Ref, watch } from 'vue';
+  import { defineComponent } from 'vue';
   import { Table, Input, Checkbox } from 'ant-design-vue';
   import { Icon } from '/@/components/Icon';
-
-  export interface DataItem {
-    selected: boolean;
-    keys: string;
-    value: string;
-    desc: string;
-  }
+  import { KVD, Request } from '/#/store';
 
   export default defineComponent({
     name: 'Parameters',
@@ -58,22 +54,11 @@
     },
     props: {
       data: {
-        type: Array,
-        default: () => {
-          return [
-            {
-              selected: false,
-              keys: '',
-              value: '',
-              desc: '',
-            },
-          ];
-        },
+        type: Object,
       },
     },
-    emits: ['change'],
 
-    setup(props, context) {
+    setup(props) {
       const columns = [
         {
           title: '',
@@ -104,80 +89,59 @@
         },
       ];
 
-      // const data: Ref<DataItem[]> = ref([
-      //   {
-      //     selected: false,
-      //     keys: '',
-      //     value: '',
-      //     desc: '',
-      //   },
-      // ]);
+      let { path, url, parameters } = props.data as Request;
 
-      const editableData: Ref<Array<Map<string, boolean>>> = ref([
-        new Map<string, boolean>([
-          ['keys', false],
-          ['value', false],
-          ['desc', false],
-        ]),
-      ]);
-
-      // watch(
-      //   () => props.data,
-      //   (val) => {
-      //     console.log(val);
-      //   },
-      // );
-
-      // watch(data.value, (val) => {
-      //   let value = val as DataItem[];
-      //   let params: Array<string> = [];
-      //   for (let item of value.slice(0, value.length - 1)) {
-      //     let dataItem = item as DataItem;
-      //     if (dataItem.selected && dataItem.keys !== '') {
-      //       params.push(`${dataItem.keys}=${dataItem.value}`);
-      //     }
-      //   }
-      //   if (params) {
-      //     context.emit('change', params.join('&'));
-      //   }
-      // });
-
-      const handleClick = (index: number, dataIndex: string) => {
-        editableData.value[index].set(dataIndex, true);
+      const pushItem = () => {
+        parameters.push({
+          in: 'query',
+          required: false,
+          selected: true,
+          keys: '',
+          value: '',
+          doc: '',
+          edited: [],
+        });
       };
 
-      const handleBlur = (index: number, dataIndex: string) => {
-        editableData.value[index].set(dataIndex, false);
+      if (props.data) {
+        if (parameters.length === 0) {
+          pushItem();
+        }
+      }
+
+      const handleClick = (record: KVD, dataIndex: string) => {
+        if (record['in'] === 'path' && dataIndex === 'keys') {
+          return;
+        }
+        record['edited'].push(dataIndex);
+      };
+
+      const handleBlur = (record: KVD, dataIndex: string) => {
+        record['edited'].splice(record['edited'].indexOf(dataIndex), 1);
       };
 
       const handleChange = (index: number) => {
-        if (index === props.data.length - 1) {
-          (props.data as DataItem[]).push({
-            selected: false,
-            keys: '',
-            value: '',
-            desc: '',
-          });
-          editableData.value.push(
-            new Map<string, boolean>([
-              ['keys', false],
-              ['value', false],
-              ['desc', false],
-            ]),
-          );
+        if (index === parameters.length - 1) {
+          pushItem();
         }
-        (props.data as DataItem[])[index].selected = true;
+
+        let query: string[] = [];
+        for (let item of parameters) {
+          if (item.in === 'query' && item.keys !== '') {
+            query.push(`${item.keys}=${item.value}`);
+          }
+        }
+        url = path + '?' + query.join('&');
       };
 
       const handleClose = (index: number) => {
-        (props.data as DataItem[]).splice(index, 1);
-        editableData.value.splice(index, 1);
+        parameters.splice(index, 1);
       };
 
       return {
         columns,
-        // data,
-        editableData,
+        url,
+        parameters,
         handleClick,
         handleBlur,
         handleChange,
@@ -190,13 +154,13 @@
 <style lang="less" scoped>
   .ant-table-row {
     .icon {
-      display: none;
+      visibility: hidden;
       margin-right: 10px;
     }
 
     &:hover {
       .icon {
-        display: inline;
+        visibility: visible;
         margin-right: 10px;
       }
     }

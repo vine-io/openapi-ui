@@ -62,17 +62,21 @@ export interface Request {
   method: string;
   path: string;
   url: string;
-  parameters?: Array<KVD>;
+  parameters: Array<KVD>;
   authorization?: Bearer | Basic;
-  headers?: Array<KVD>;
-  body?: Array<KVD>;
+  headers: Array<KVD>;
+  body: Array<KVD>;
   cookies?: Cookies;
 }
 
 export interface KVD {
-  key?: string;
-  value?: string;
+  in: string;
+  required: boolean;
+  selected: boolean;
+  keys: string;
+  value: string;
   doc?: string;
+  edited: string[];
 }
 
 export interface Bearer {

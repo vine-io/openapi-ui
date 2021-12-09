@@ -21,16 +21,7 @@
 <script lang="ts">
   import { defineComponent, onMounted, ref } from 'vue';
   import { Collapse, CollapsePanel } from 'ant-design-vue';
-  import {
-    Basic,
-    Bearer,
-    Cookies,
-    KVD,
-    OpenAPIPath,
-    OpenAPIPathDocs,
-    Request,
-    Response,
-  } from '/#/store';
+  import { KVD, OpenAPIPath, OpenAPIPathDocs, OpenAPISession, Request } from '/#/store';
   import { useOpenAPIStore } from '/@/store/modules/openapi';
 
   export default defineComponent({
@@ -45,7 +36,7 @@
     },
     emits: ['changeContent'],
 
-    setup(props, context) {
+    setup(props) {
       let activeKey = ref(['0']);
 
       const apiStore = useOpenAPIStore();
@@ -53,22 +44,37 @@
       const onSelectPath = (path: OpenAPIPath, method: string, url: string) => {
         let docs = Reflect.get(path, method) as OpenAPIPathDocs;
 
+        let request = {
+          method: method,
+          path: url,
+          url: url,
+          parameters: new Array<KVD>(),
+          // authorization?: Bearer | Basic;
+          headers: new Array<KVD>(),
+          body: new Array<KVD>(),
+        };
+
+        if (docs.parameters) {
+          for (let item of docs.parameters) {
+            let param: KVD = {
+              in: item.in || 'query',
+              required: item.required || false,
+              selected: true,
+              keys: item.name || '',
+              value: '',
+              edited: [],
+            };
+            request.parameters.push(param);
+          }
+        }
+
         let session = {
-          request: {
-            method: method,
-            path: url,
-            url: url,
-            // parameters?: Array<KVD>;
-            // authorization?: Bearer | Basic;
-            headers: [],
-            // body?: Array<KVD>;
-          },
+          request: request,
           response: {},
           docs: docs,
         };
 
         apiStore.pushSession(session);
-        // context.emit('changeContent', new APIContent(url, method, docs));
       };
 
       onMounted(async () => {

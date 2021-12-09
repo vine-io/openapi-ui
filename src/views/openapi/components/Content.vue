@@ -9,7 +9,7 @@
       @edit="handleEdit"
     >
       <TabPane v-for="(session, index) in sessions" :key="index" :tab="session.request.url">
-        <Session />
+        <Session :data="session" />
       </TabPane>
     </Tabs>
   </div>
@@ -50,6 +50,10 @@
           }
         },
       );
+
+      setInterval(() => {
+        apiStore.setAPISession({ store: sessions });
+      }, 5000);
 
       const handleEdit = (targetKey: number) => {
         if (sessions.length > 1) {

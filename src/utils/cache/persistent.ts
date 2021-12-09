@@ -103,10 +103,15 @@ export class Persistent {
       return openAPIMemory.get(key)?.value;
     }
 
-    return Reflect.get(os.get(key), API_SESSION_KEY).value as OpenAPISessions;
+    const sessions = os.get(key);
+    if (!sessions) {
+      return { store: [] };
+    }
+
+    return Reflect.get(sessions, API_SESSION_KEY).value as OpenAPISessions;
   }
 
-  static setOpenAPI(key: OpenAPIKeys, value: OpenAPIStore[OpenAPIKeys], immediate = false): void {
+  static setOpenAPI(key: OpenAPIKeys, value: OpenAPISessions, immediate = false): void {
     openAPIMemory.set(key, toRaw(value));
     immediate && os.set(API_SESSION_KEY, openAPIMemory.getCache);
   }

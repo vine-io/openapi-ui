@@ -28,7 +28,7 @@ export const useOpenAPIStore = defineStore({
   actions: {
     setAPISession(sessions: OpenAPISessions) {
       this.apiSession = Object.assign({}, this.apiSession, sessions);
-      Persistent.setOpenAPI(API_SESSION_KEY, this.apiSession, true);
+      Persistent.setOpenAPI(API_SESSION_KEY, sessions, true);
     },
     pushSession(session: OpenAPISession) {
       if (!this.apiSession) {
