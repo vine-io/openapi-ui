@@ -19,7 +19,7 @@
     <div class="md:flex enter-y content-request">
       <Tabs class="w-full" size="small">
         <TabPane class="content-request-body" key="1" tab="Param">
-          <Parameters :data="request" />
+          <Parameters :data="parameters" />
         </TabPane>
         <TabPane class="content-request-body" key="2" tab="Authorization"
           >Content of Tab Pane 1
@@ -40,10 +40,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, watch } from 'vue';
+  import { defineComponent, ref, watch } from 'vue';
   import { Button, Input, Tabs, TabPane, Divider } from 'ant-design-vue';
   import Parameters from '/@/views/openapi/components/Parameters.vue';
-  import { OpenAPISession } from '/#/store';
+  import { useOpenAPIStore } from '/@/store/modules/openapi';
 
   export default defineComponent({
     name: 'Session',
@@ -56,46 +56,48 @@
       Parameters,
     },
     props: {
-      data: Object,
+      index: {
+        type: Number,
+        default: 0,
+      },
     },
 
     setup(props) {
-      const { docs, request, response } = props.data as OpenAPISession;
+      const apiStore = useOpenAPIStore();
 
-      watch(
-        () => request,
-        (val) => {
-          console.log(val);
-        },
-      );
+      const session = apiStore.getAPISession[props.index];
 
-      watch(
-        () => request.parameters,
-        (val) => {
-          let parameters = val;
-          let query: string[] = [];
-          let paths: Map<string, string> = new Map<string, string>();
+      let { docs, request, response } = session;
+      let { parameters } = request;
+      // let docs = ref(session.docs);
+      // let request = ref(session.request);
+      // let response = ref(session.response);
 
-          for (let param of parameters) {
-            if (param.in === 'path') {
-              paths.set(param.keys, param.value);
-            }
-            if (param.in === 'query' && param.keys !== '' && param.selected) {
-              query.push(`${param.keys}=${param.value}`);
-            }
+      watch(parameters, (val) => {
+        let parameters = val;
+        let query: string[] = [];
+        let paths: Map<string, string> = new Map<string, string>();
+
+        for (let param of parameters) {
+          if (param.in === 'path') {
+            paths.set(param.keys, param.value);
           }
-          let targetUrl = request.path;
-          for (let [key, value] of paths) {
-            targetUrl = targetUrl.replace('{' + key + '}', value);
+          if (param.in === 'query' && param.keys !== '' && param.selected) {
+            query.push(`${param.keys}=${param.value}`);
           }
+        }
+        let targetUrl = request.path;
+        for (let [key, value] of paths) {
+          targetUrl = targetUrl.replace('{' + key + '}', value);
+        }
 
-          request.url = targetUrl + '?' + query.join('&');
-        },
-      );
+        request.url = query.length > 0 ? targetUrl + '?' + query.join('&') : targetUrl;
+      });
 
       return {
         docs,
         request,
+        parameters,
         response,
       };
     },

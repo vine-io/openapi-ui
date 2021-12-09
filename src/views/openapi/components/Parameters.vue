@@ -42,7 +42,7 @@
   import { defineComponent } from 'vue';
   import { Table, Input, Checkbox } from 'ant-design-vue';
   import { Icon } from '/@/components/Icon';
-  import { KVD, Request } from '/#/store';
+  import { KVD } from '/#/store';
 
   export default defineComponent({
     name: 'Parameters',
@@ -54,7 +54,7 @@
     },
     props: {
       data: {
-        type: Object,
+        type: Array,
       },
     },
 
@@ -89,7 +89,7 @@
         },
       ];
 
-      let { path, url, parameters } = props.data as Request;
+      let parameters = props.data as KVD[];
 
       const pushItem = () => {
         parameters.push({
@@ -104,9 +104,7 @@
       };
 
       if (props.data) {
-        if (parameters.length === 0) {
-          pushItem();
-        }
+        if (props.data.length > 0) pushItem();
       }
 
       const handleClick = (record: KVD, dataIndex: string) => {
@@ -124,14 +122,6 @@
         if (index === parameters.length - 1) {
           pushItem();
         }
-
-        let query: string[] = [];
-        for (let item of parameters) {
-          if (item.in === 'query' && item.keys !== '') {
-            query.push(`${item.keys}=${item.value}`);
-          }
-        }
-        url = path + '?' + query.join('&');
       };
 
       const handleClose = (index: number) => {
@@ -140,7 +130,6 @@
 
       return {
         columns,
-        url,
         parameters,
         handleClick,
         handleBlur,
